@@ -175,6 +175,13 @@
     if (defendingSpots.length > 0) {
       // we have a defending move, USE it
       return defendingSpots[0];
+    } // we didn't find winning or losing spot, so we attack
+
+
+    var attackingSelectedMove = getAttackingMove();
+
+    if (attackingSelectedMove) {
+      return attackingSelectedMove;
     } // random movement, default option
     // since AI plays every one turn, better to flush the possible moves
     // to take into consideration last player move
@@ -289,7 +296,7 @@
     for (var i = 0; i < board.length; i++) {
       var possibleRowSpot = processRowWin(i);
       checkPossibleCriticalSpot(possibleRowSpot, winningSpots, -1);
-      checkPossibleCriticalSpot(possibleRowSpot, defendingSpots, 1);
+      checkPossibleCriticalSpot(possibleRowSpot, defendingSpots, board.length - 2);
     }
 
     if (winningSpots.length === 0) {
@@ -297,7 +304,7 @@
       for (var _i4 = 0; _i4 < board.length; _i4++) {
         var possibleColSpot = processColumnWin(_i4);
         checkPossibleCriticalSpot(possibleColSpot, winningSpots, -1);
-        checkPossibleCriticalSpot(possibleColSpot, defendingSpots, 1);
+        checkPossibleCriticalSpot(possibleColSpot, defendingSpots, board.length - 2);
       }
     }
 
@@ -305,14 +312,14 @@
       // nothing yet... keep searching. Let's do direct diagonal
       var possibleDDSpot = processDirectDiagonalWin();
       checkPossibleCriticalSpot(possibleDDSpot, winningSpots, -1);
-      checkPossibleCriticalSpot(possibleDDSpot, defendingSpots, 1);
+      checkPossibleCriticalSpot(possibleDDSpot, defendingSpots, board.length - 2);
     }
 
     if (winningSpots.length === 0) {
       // nothing yet... keep searching. Let's do inverted diagonal
       var possibleIDSpot = processInvertedDiagonalWin();
       checkPossibleCriticalSpot(possibleIDSpot, winningSpots, -1);
-      checkPossibleCriticalSpot(possibleIDSpot, defendingSpots, 1);
+      checkPossibleCriticalSpot(possibleIDSpot, defendingSpots, board.length - 2);
     } // return all possible winning and defending spots
 
 
@@ -320,7 +327,7 @@
       winningSpots: winningSpots,
       defendingSpots: defendingSpots
     };
-  } // process one spot to see if it is viable as a winning one
+  } // process one spot to see if it is viable as a winning or defending one
 
 
   function checkPossibleCriticalSpot(spot, criticalSpotsArray, targetValue) {
@@ -331,5 +338,236 @@
         y: spot.column
       });
     }
+  } // process row for attack spots
+
+
+  function checkPossibleAttackSpotsInRow(index, spotsArray) {
+    var order = board.length;
+    var rowSpots = [];
+
+    for (var i = 0; i < order; i++) {
+      // if one X is found, abort and clear possible spots. 
+      // This row is already taken and useless
+      if (board[index][i] === 1) {
+        rowSpots = [];
+        break;
+      } // If -1 is found, save it. May be useful.
+
+
+      if (board[index][i] === -1) {
+        rowSpots.push({
+          x: index,
+          y: i
+        });
+      }
+    } // now we populate the global array. For every element, we pass the empties
+    // of the set it belongs to, that is the temporal array’s length.
+
+
+    if (rowSpots.length > 0) {
+      rowSpots.forEach(function (item) {
+        return spotsArray.push({
+          x: item.x,
+          y: item.y,
+          empties: rowSpots.length * -1,
+          type: 'row'
+        });
+      });
+    }
+  } // process column for attack spots
+
+
+  function checkPossibleAttackSpotsInColumn(index, spotsArray) {
+    var order = board.length;
+    var colSpots = [];
+
+    for (var i = 0; i < order; i++) {
+      // if one X is found, abort and clear possible spots. 
+      // This column is already taken and useless
+      if (board[i][index] === 1) {
+        colSpots = [];
+        break;
+      } // If -1 is found, save it. May be useful.
+
+
+      if (board[i][index] === -1) {
+        colSpots.push({
+          x: i,
+          y: index
+        });
+      }
+    } // now we populate the global array. For every element, we pass the empties
+    // of the set it belongs to, that is the temporal array’s length.
+
+
+    if (colSpots.length > 0) {
+      colSpots.forEach(function (item) {
+        return spotsArray.push({
+          x: item.x,
+          y: item.y,
+          empties: colSpots.length * -1,
+          type: 'column'
+        });
+      });
+    }
+  } // process direct diagonal for attack spots
+
+
+  function checkPossibleAttackSpotsInDirectDiagonal(spotsArray) {
+    var order = board.length;
+    var diagSpots = [];
+
+    for (var i = 0; i < order; i++) {
+      // if one X is found, abort and clear possible spots. 
+      // This column is already taken and useless
+      if (board[i][i] === 1) {
+        diagSpots = [];
+        break;
+      } // If -1 is found, save it. May be useful.
+
+
+      if (board[i][i] === -1) {
+        diagSpots.push({
+          x: i,
+          y: i
+        });
+      }
+    } // now we populate the global array. For every element, we pass the empties
+    // of the set it belongs to, that is the temporal array’s length.
+
+
+    if (diagSpots.length > 0) {
+      diagSpots.forEach(function (item) {
+        return spotsArray.push({
+          x: item.x,
+          y: item.y,
+          empties: diagSpots.length * -1,
+          type: 'direct diagonal'
+        });
+      });
+    }
+  } // process inverted diagonal for attack spots
+
+
+  function checkPossibleAttackSpotsInInvertedDiagonal(spotsArray) {
+    var order = board.length;
+    var diagSpots = [];
+
+    for (var i = 0, j = order - 1; i < order; i++, j--) {
+      // if one X is found, abort and clear possible spots. 
+      // This column is already taken and useless
+      if (board[i][j] === 1) {
+        diagSpots = [];
+        break;
+      } // If -1 is found, save it. May be useful.
+
+
+      if (board[i][j] === -1) {
+        diagSpots.push({
+          x: i,
+          y: j
+        });
+      }
+    } // now we populate the global array. For every element, we pass the empties
+    // of the set it belongs to, that is the temporal array’s length.
+
+
+    if (diagSpots.length > 0) {
+      diagSpots.forEach(function (item) {
+        return spotsArray.push({
+          x: item.x,
+          y: item.y,
+          empties: diagSpots.length * -1,
+          type: 'inverted diagonal'
+        });
+      });
+    }
+  }
+
+  function getAttackingMove() {
+    // this array will contain every possible move, even repeated ones
+    var attackingArray = []; // find out what happens with rows and columns
+
+    for (var i = 0; i < board.length; i++) {
+      checkPossibleAttackSpotsInRow(i, attackingArray);
+      checkPossibleAttackSpotsInColumn(i, attackingArray);
+    } // find out what happens with diagonals
+
+
+    checkPossibleAttackSpotsInDirectDiagonal(attackingArray);
+    checkPossibleAttackSpotsInInvertedDiagonal(attackingArray); // now we look for repeated moves, cause those are the best ones
+
+    var duplicatedAttackingArray = [];
+    splitDuplicatedSpotsFromAttackArray(attackingArray, duplicatedAttackingArray); // if we have duplicated spots, lets find one with more repetitions
+
+    if (duplicatedAttackingArray.length > 0) {
+      var mostRepeatedSpot = duplicatedAttackingArray[0];
+
+      for (var _i5 = 1; _i5 < duplicatedAttackingArray.length; _i5++) {
+        if (duplicatedAttackingArray[_i5].repetitions > mostRepeatedSpot.repetitions) {
+          mostRepeatedSpot = duplicatedAttackingArray[_i5];
+        }
+      } // and we have our guy. Return it! (be carefull to return only the spot
+      // to have direct access to x and y in findPossibleMove)          
+
+
+      return mostRepeatedSpot.spot;
+    } // if we didn't find any duplicated, then we will need to get
+    // the most aggressive moves. That is, find which spots have 
+    // empties property with the smallest values. Unfortunately, 
+    // we need to check the array twice:
+    //  -Once for finding the smallest empties value
+    //  -Once for getting the spots that have that value
+
+
+    var smallestEmpties = attackingArray[0].empties;
+
+    for (var _i6 = 1; _i6 < attackingArray.length; _i6++) {
+      if (attackingArray[_i6].empties < smallestEmpties) {
+        smallestEmpties = attackingArray[_i6].empties;
+      }
+    } // now we filter the spots that have that smallestEmpties as value
+
+
+    var mostAggressive = attackingArray.filter(function (spot) {
+      return spot.empties === smallestEmpties;
+    }); // now we get a random value from this array and play
+
+    var randomPick = Math.floor(Math.random() * mostAggressive.length);
+    return mostAggressive[randomPick];
+  }
+
+  function splitDuplicatedSpotsFromAttackArray(sourceArray, targetArray) {
+    // this function extracts and deletes every duplicated element
+    // in sourceArray and passes it to targetArray alongside with
+    // the amount of times it appears in sourceArray.
+    // first detect and mark the duplicated
+    sourceArray.forEach(function (item, index) {
+      // if we haven't found it yet, it does not have marked property associated
+      if (!item.repeated) {
+        var repetitions = 0;
+
+        for (var i = 0; i < sourceArray.length; i++) {
+          var current = sourceArray[i]; // check if the spot is again in the array
+
+          if (current.x === item.x && current.y === item.y && index !== i) {
+            // we found a duplicated
+            repetitions++; // and marking it to avoid detecting this spot again
+
+            current['repeated'] = 1;
+          }
+        } // if, after looking for it, the element is a duplicated,
+        // record it and the amount of times it repeated
+
+
+        if (repetitions > 0) {
+          item['repeated'] = 1;
+          targetArray.push({
+            spot: item,
+            repetitions: repetitions
+          });
+        }
+      }
+    });
   }
 })();
