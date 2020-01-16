@@ -33,6 +33,7 @@ main { min-height: calc(100vh - 140px); }
 .board .square {
     flex-grow: 1;
     transition: background-color .3s ease;
+    opacity: 0.09;
 }
 
 .board .square:hover {
@@ -129,6 +130,13 @@ footer p {
     border: 2px solid tomato;
     font-size: 16px;
     transition: all .3s ease;
+}
+
+.ui-game button[disabled] {
+    background-color: #999 !important;
+    border: 2px solid #999;
+    color: #fff !important;
+    cursor: initial !important;
 }
 
 .ui-game button:hover {

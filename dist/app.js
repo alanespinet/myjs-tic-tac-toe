@@ -41,6 +41,8 @@
             makeMove(aiMove.x, aiMove.y);
           }
         }
+      } else {
+        alert('Please select Order and Difficulty in order to Play');
       }
     }
   });
@@ -52,8 +54,21 @@
     var difficultyIndex = document.getElementById('game-difficulty').selectedIndex;
     difficultyTarget = difficultyOptions[difficultyIndex].getAttribute('data-difficulty');
     drawBoard();
+    turn = 'cross';
+    completedPlays = 0;
+    possibleMoves = [];
     canPlay = true;
+    document.querySelectorAll('div.square').forEach(function (item) {
+      item.style.opacity = '1';
+      disableUI();
+    });
   });
+
+  function disableUI() {
+    document.getElementById('game-order').setAttribute('disabled', 'disabled');
+    document.getElementById('game-difficulty').setAttribute('disabled', 'disabled');
+    document.getElementById('btn-play').setAttribute('disabled', 'disabled');
+  }
 
   function makeMove(row, column, square, img) {
     var squareTag, imgTag; // Get the square and the img related to it
@@ -93,6 +108,20 @@
         canPlay = false;
       }
     }
+
+    if (!canPlay) {
+      document.querySelectorAll('div.square').forEach(function (item) {
+        item.children[0].setAttribute('src', 'images/blank.png');
+        item.style.opacity = '0.09';
+        enableUI();
+      });
+    }
+  }
+
+  function enableUI() {
+    document.getElementById('game-order').removeAttribute('disabled');
+    document.getElementById('game-difficulty').removeAttribute('disabled');
+    document.getElementById('btn-play').removeAttribute('disabled');
   }
 
   function isInDirectDiagonal(row, column) {
