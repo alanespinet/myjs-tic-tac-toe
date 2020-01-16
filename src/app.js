@@ -7,40 +7,54 @@
         cross: 1
     };
     // this is the board representation, a bi-dimensional array
-    let board = [
-        [-1, -1, -1],
-        [-1, -1, -1],
-        [-1, -1, -1]
-    ];
+    let board = null;
     // the amount of plays done so far. When it gets 9 and we have no
     // winner, its a draw:
     let completedPlays = 0;
     // alloys the player to keep playing
-    let canPlay = true;
+    let canPlay = false;
     // possible AI moves
     let possibleMoves = [];
+    // difficulty. Comes from UI
+    let difficultyTarget = 100;
+    // order of the game
+    let order = 3;
+    // matchMedia
+    const mediaQ = window.matchMedia('(max-width: 767px)');
 
-    // forEach is necessary because every single square needs the event. When
-    // the click in bound:
-        // e.target points to the image inside the .square div (we click the image)
-        // this points to the actual .square div.
-    document.querySelectorAll('.board .square').forEach( item => {
-        item.addEventListener('click', function(e){            
+    document.querySelector('.board').addEventListener('click', function(e){
+        if( e.target && e.target.nodeName == 'IMG' ){
+            let img = e.target;
+            let square = e.target.parentNode;
+
             if( canPlay ){
-                let used = this.getAttribute('used'); 
-                let row = this.getAttribute('x');
-                let column = this.getAttribute('y');
-                
+                let used = square.getAttribute('used'); 
+                let row = square.getAttribute('x');
+                let column = square.getAttribute('y');
+
                 if( used === '0' ){
-                    makeMove(row, column, this, e.target);
+                    makeMove(row, column, square, img);
 
                     if( canPlay ){
                         const aiMove = findPossibleMove();
                         makeMove( aiMove.x, aiMove.y );
                     }
                 }
-            } 
-        });
+            }
+        }
+    });
+
+    document.getElementById('btn-play').addEventListener('click', function(){
+        let orderOptions = document.getElementById('game-order').options;
+        let orderIndex = document.getElementById('game-order').selectedIndex;
+        order = orderOptions[orderIndex].getAttribute('data-order');
+
+        let difficultyOptions = document.getElementById('game-difficulty').options;
+        let difficultyIndex = document.getElementById('game-difficulty').selectedIndex;
+        difficultyTarget = difficultyOptions[difficultyIndex].getAttribute('data-difficulty');
+        
+        drawBoard();
+        canPlay = true;
     });
 
     function makeMove(row, column, square, img){
@@ -71,13 +85,6 @@
         board[row][column] = values[turn];
         completedPlays++;
         turn = turn === 'cross' ? 'circle' : 'cross';
-
-        // REMOVE
-        // console.log( board );
-        // console.log( sumDirectDiagonalValue() );
-        // console.log( sumInvertedDiagonalValue() );
-        // console.log( '----------------------------' );
-        // REMOVE
 
         // check if the game is over, with victory...
         if( gameHasBeenWon(row, column) ){
@@ -164,6 +171,34 @@
     }
 
     function findPossibleMove(){
+        // play intelligently based on difficultyTarget
+        const difficultyRnd = Math.floor( Math.random() * 100 );
+        const intelligentMove = makeIntelligentMove();
+        if( difficultyRnd < difficultyTarget && intelligentMove){                        
+            return intelligentMove;
+        }
+
+        // random movement, default option
+        // since AI plays every one turn, better to flush the possible moves
+        // to take into consideration last player move
+        possibleMoves = [];
+        const order = board.length;
+
+        for( let i = 0; i < order; i++ )
+            for( let j = 0; j < order; j++ )
+                if( board[i][j] === -1 )
+                    possibleMoves.push({
+                        x: i,
+                        y: j
+                    });
+        
+        // we have an array with all possible moves. Now we simply
+        // peek one random
+        const moveIndex = Math.floor( Math.random() * possibleMoves.length );
+        return possibleMoves[ moveIndex ];
+    }
+
+    function makeIntelligentMove(){
         // first the AI will try to win or defend
         const criticalSpots = findCriticalSpots();
         // get both arrays
@@ -185,25 +220,6 @@
         if( attackingSelectedMove ){
             return attackingSelectedMove;
         }
-
-        // random movement, default option
-        // since AI plays every one turn, better to flush the possible moves
-        // to take into consideration last player move
-        possibleMoves = [];
-        const order = board.length;
-
-        for( let i = 0; i < order; i++ )
-            for( let j = 0; j < order; j++ )
-                if( board[i][j] === -1 )
-                    possibleMoves.push({
-                        x: i,
-                        y: j
-                    });
-        
-        // we have an array with all possible moves. Now we simply
-        // peek one random
-        const moveIndex = Math.floor( Math.random() * possibleMoves.length );
-        return possibleMoves[ moveIndex ];
     }
 
     function processRowWin(index){
@@ -329,6 +345,62 @@
         }
     }
 
+    window.onload = function(){
+        drawBoard();
+    };
+
+    function drawBoard(){
+        const boardDiv = document.getElementsByClassName('board')[0];    
+        boardDiv.innerHTML = '';   
+        const cssPercent = (parseInt(100 / order) - 1) + '%';
+
+
+        for( let i = 0; i < order; i++ ){
+            for( let j = 0; j < order; j++ ){
+                let div = document.createElement('div');
+                    div.setAttribute('class', 'square');
+                    div.setAttribute('x', i);
+                    div.setAttribute('y', j);
+                    div.setAttribute('used', '0');
+                    div.setAttribute('value', '-1');
+
+                let img = document.createElement('img');
+                    img.setAttribute('src', './images/blank.png');
+                    img.setAttribute('alt', '');
+
+                div.appendChild(img);
+                boardDiv.appendChild(div);
+
+                div.setAttribute('style', 'flex-basis: ' + cssPercent + ';');
+            }
+        }
+
+        adjustSquareHeights();
+        createBoard();
+    }
+
+    function adjustSquareHeights(){
+        document.querySelectorAll('div.square').forEach(item => {
+            const w = window.getComputedStyle(item).width;
+            let style = item.getAttribute('style');
+            style += ' height: ' + w + ';';
+            item.setAttribute( 'style', style );
+        });
+    }
+
+    mediaQ.addListener( adjustSquareHeights );
+
+    function createBoard(){
+        board = [];
+        for( let i = 0; i < order; i++ ){
+            let innerArr = [];
+            for( let j = 0; j < order; j++ ){
+                innerArr.push(-1);
+            }
+            board.push(innerArr);
+        }
+    }
+
     // process row for attack spots
     function checkPossibleAttackSpotsInRow(index, spotsArray){
         const order = board.length;
@@ -356,7 +428,7 @@
             rowSpots.forEach(item => spotsArray.push({
                 x: item.x,
                 y: item.y,
-                empties: rowSpots.length * -1,
+                empties: rowSpots.length,
                 type: 'row'
             }));
         }
@@ -389,7 +461,7 @@
             colSpots.forEach(item => spotsArray.push({
                 x: item.x,
                 y: item.y,
-                empties: colSpots.length * -1,
+                empties: colSpots.length,
                 type: 'column'
             }));
         }
@@ -422,7 +494,7 @@
             diagSpots.forEach(item => spotsArray.push({
                 x: item.x,
                 y: item.y,
-                empties: diagSpots.length * -1,
+                empties: diagSpots.length,
                 type: 'direct diagonal'
             }));
         }
@@ -455,7 +527,7 @@
             diagSpots.forEach(item => spotsArray.push({
                 x: item.x,
                 y: item.y,
-                empties: diagSpots.length * -1,
+                empties: diagSpots.length,
                 type: 'inverted diagonal'
             }));
         }
@@ -475,47 +547,49 @@
         checkPossibleAttackSpotsInDirectDiagonal(attackingArray);
         checkPossibleAttackSpotsInInvertedDiagonal(attackingArray);
 
-        // now we look for repeated moves, cause those are the best ones
-        let duplicatedAttackingArray = [];
-        splitDuplicatedSpotsFromAttackArray( attackingArray, duplicatedAttackingArray);
+        if( attackingArray.length > 0 ){
+            // now we look for repeated moves, cause those are the best ones
+            let duplicatedAttackingArray = [];
+            splitDuplicatedSpotsFromAttackArray( attackingArray, duplicatedAttackingArray);
 
-        // if we have duplicated spots, lets find one with more repetitions
-        if( duplicatedAttackingArray.length > 0 ){
-            let mostRepeatedSpot = duplicatedAttackingArray[0];
-            for( let i = 1; i < duplicatedAttackingArray.length; i++ ){
-                if( duplicatedAttackingArray[i].repetitions > mostRepeatedSpot.repetitions ){
-                    mostRepeatedSpot = duplicatedAttackingArray[i];
+            // if we have duplicated spots, lets find one with more repetitions
+            if( duplicatedAttackingArray.length > 0 ){
+                let mostRepeatedSpot = duplicatedAttackingArray[0];
+                for( let i = 1; i < duplicatedAttackingArray.length; i++ ){
+                    if( duplicatedAttackingArray[i].repetitions > mostRepeatedSpot.repetitions ){
+                        mostRepeatedSpot = duplicatedAttackingArray[i];
+                    }
+                }
+
+                // and we have our guy. Return it! (be carefull to return only the spot
+                // to have direct access to x and y in findPossibleMove)          
+                return mostRepeatedSpot.spot;
+            }
+
+            // if we didn't find any duplicated, then we will need to get
+            // the most aggressive moves. That is, find which spots have 
+            // empties property with the smallest values. Unfortunately, 
+            // we need to check the array twice:
+            //  -Once for finding the smallest empties value
+            //  -Once for getting the spots that have that value
+            let smallestEmpties = attackingArray[0].empties;
+            for( let i = 1; i < attackingArray.length; i++ ){
+                if( attackingArray[i].empties < smallestEmpties ){
+                    smallestEmpties = attackingArray[i].empties;
                 }
             }
 
-            // and we have our guy. Return it! (be carefull to return only the spot
-            // to have direct access to x and y in findPossibleMove)          
-            return mostRepeatedSpot.spot;
+            // now we filter the spots that have that smallestEmpties as value
+            const mostAggressive = attackingArray.filter( spot => spot.empties === smallestEmpties );
+            
+            // now we get a random value from this array and play
+            let randomPick = Math.floor( Math.random() * mostAggressive.length );
+            return mostAggressive[randomPick];
         }
-
-        // if we didn't find any duplicated, then we will need to get
-        // the most aggressive moves. That is, find which spots have 
-        // empties property with the smallest values. Unfortunately, 
-        // we need to check the array twice:
-        //  -Once for finding the smallest empties value
-        //  -Once for getting the spots that have that value
-        let smallestEmpties = attackingArray[0].empties;
-        for( let i = 1; i < attackingArray.length; i++ ){
-            if( attackingArray[i].empties < smallestEmpties ){
-                smallestEmpties = attackingArray[i].empties;
-            }
-        }
-
-        // now we filter the spots that have that smallestEmpties as value
-        const mostAggressive = attackingArray.filter( spot => spot.empties === smallestEmpties );
-        
-        // now we get a random value from this array and play
-        let randomPick = Math.floor( Math.random() * mostAggressive.length );
-        return mostAggressive[randomPick];
     }
 
     function splitDuplicatedSpotsFromAttackArray(sourceArray, targetArray){
-        // this function extracts and deletes every duplicated element
+        // this function finds every duplicated element
         // in sourceArray and passes it to targetArray alongside with
         // the amount of times it appears in sourceArray.
         

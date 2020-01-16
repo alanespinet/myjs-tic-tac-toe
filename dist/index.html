@@ -20,42 +20,35 @@
 
     <main>
         <div class="container">
+
+            <div class="ui-game">
+                <div class="ui-game-wrapper">
+                    <div class="ui-game__control">
+                        <label for="game-order">Game Order:</label>
+                        <select id="game-order">
+                            <option value="three" data-order="3">3 x 3</option>
+                            <option value="four" data-order="4">4 x 4</option>
+                            <option value="five" data-order="5">5 x 5</option>
+                            <option value="six" data-order="6">6 x 6</option>
+                            <option value="seven" data-order="7">7 x 7</option>
+                        </select>
+                    </div>
+
+                    <div class="ui-game__control">
+                        <label for="game-difficulty">Difficulty:</label>
+                        <select id="game-difficulty">
+                            <option value="easy" data-difficulty="30">Easy</option>
+                            <option value="medium" data-difficulty="60" selected>Medium</option>
+                            <option value="hard" data-difficulty="75">Hard</option>
+                            <option value="hardest" data-difficulty="100">Hardest</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" id="btn-play">Play</button>
+            </div>
+
             <div class="board">
-                <div class="square" x="0" y="0" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="0" y="1" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="0" y="2" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="1" y="0" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="1" y="1" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="1" y="2" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="2" y="0" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="2" y="1" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
-
-                <div class="square" x="2" y="2" used="0" value="-1">
-                    <img src="./images/blank.png" alt="">
-                </div>
             </div>
 
             <div class="result">
