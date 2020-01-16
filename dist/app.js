@@ -68,6 +68,7 @@
     document.getElementById('game-order').setAttribute('disabled', 'disabled');
     document.getElementById('game-difficulty').setAttribute('disabled', 'disabled');
     document.getElementById('btn-play').setAttribute('disabled', 'disabled');
+    document.getElementById('result__text').innerHTML = '&nbsp;';
   }
 
   function makeMove(row, column, square, img) {
@@ -111,7 +112,6 @@
 
     if (!canPlay) {
       document.querySelectorAll('div.square').forEach(function (item) {
-        item.children[0].setAttribute('src', 'images/blank.png');
         item.style.opacity = '0.09';
         enableUI();
       });
